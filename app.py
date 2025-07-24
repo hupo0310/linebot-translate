@@ -3,18 +3,18 @@ import openai
 import requests
 import json
 import re
+import os  # 新增：讀取環境變數
 
-# 輸入你的 OpenAI API 金鑰
-openai.api_key = "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"
+# 從環境變數讀取 OpenAI 金鑰
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# 輸入你的 LINE Channel Access Token
-LINE_CHANNEL_ACCESS_TOKEN = "k+ubF+GmoRExH4MramaX1FNSlOWGKGzB75DNZynstJjZ/fWJGQPN1LT18eR+6WsTeSY5Q9amK8HpcBU+CrgDv8F9PSNi8IiYAZwStbog6fy2J67oTZ65hU0nbhsU6MiAUtWTKbaPlNU75b3zndCLbAdB04t89/1O/w1cDnyilFU="
+# 從環境變數讀取 LINE 金鑰
+LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
 
 app = Flask(__name__)
 
 # 翻譯主程式：使用 GPT 將中翻日或日翻中
 def translate_text(text):
-    # 簡易語言判斷（包含中文就當中文）
     if re.search(r'[\u4e00-\u9fff]', text):
         prompt = f"請將以下中文翻譯成自然的日文：\n{text}"
     else:
@@ -22,7 +22,7 @@ def translate_text(text):
 
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # 若你有 GPT-4 API 可改成 gpt-4
+            model="gpt-4",  # 如果你使用 GPT-3.5 改為 gpt-3.5-turbo
             messages=[
                 {"role": "system", "content": "你是一個雙語翻譯助手。"},
                 {"role": "user", "content": prompt}
@@ -68,5 +68,7 @@ def webhook():
     else:
         abort(400)
 
+# ✅ 修正這一段：讓 Render 能偵測你的服務
 if __name__ == "__main__":
-    app.run(port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
